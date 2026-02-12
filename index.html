@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -65,22 +64,235 @@
         .animate-pulse-gold {
             animation: pulse-gold 2s infinite;
         }
+
+        /* Estilo para o painel admin */
+        #admin-panel {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+        }
+        #admin-panel:hover {
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+        }
+        #admin-senha:focus {
+            border-color: #d4af37;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(212,175,55,0.2);
+        }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react@^19.2.4",
+                "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+                "react/": "https://esm.sh/react@^19.2.4/",
+                "vite": "https://esm.sh/vite@^7.3.1",
+                "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/index.css">
 </head>
 <body>
+    <!-- ===== PAINEL ADMIN COM SENHA ===== -->
+    <div id="admin-panel" style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 15px 20px; border-radius: 50px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: flex; gap: 12px; align-items: center; border: 1px solid #d4af37;">
+        <span style="color: #d4af37; font-size: 18px;">🔐</span>
+        <input type="password" id="admin-senha" placeholder="Senha admin" style="padding: 8px 15px; border: 1px solid #e2e8f0; border-radius: 25px; font-size: 14px; outline: none; transition: all 0.3s; width: 140px;">
+        <button onclick="verificarSenha()" style="background: #d4af37; color: white; border: none; padding: 8px 20px; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(212,175,55,0.3);">
+            Ativar
+        </button>
+        <span id="admin-status" style="font-size: 13px; color: #666; min-width: 120px;"></span>
+    </div>
+
     <div id="root"></div>
+    
     <script type="module" src="/index.tsx"></script>
+    
+    <script>
+        // ===== CONFIGURAÇÕES =====
+        const SENHA_ADMIN = "Sahombe13"; // ✅ SENHA DEFINIDA: Sahombe13
+        
+        // ===== CHAVES DO LOCALSTORAGE =====
+        const STORAGE_KEYS = {
+            CAPA: 'capaImage',
+            MOMENTO: 'momentoImage',
+            LOCAL: 'localImage'
+        };
+        
+        // ===== SISTEMA DE SENHA =====
+        window.verificarSenha = function() {
+            const senhaDigitada = document.getElementById('admin-senha')?.value;
+            const statusEl = document.getElementById('admin-status');
+            
+            if (!senhaDigitada || !statusEl) return;
+            
+            if (senhaDigitada === SENHA_ADMIN) {
+                localStorage.setItem('isAdmin', 'true');
+                statusEl.innerHTML = '✅ Admin ativado!';
+                statusEl.style.color = 'green';
+                mostrarBotoesUpload();
+                
+                document.getElementById('admin-panel').style.borderColor = '#4CAF50';
+                setTimeout(() => {
+                    statusEl.innerHTML = '✅ Admin ativo';
+                    location.reload();
+                }, 1500);
+            } else {
+                localStorage.removeItem('isAdmin');
+                statusEl.innerHTML = '❌ Senha incorreta';
+                statusEl.style.color = 'red';
+            }
+        };
+        
+        // ===== CONTROLE DOS BOTÕES DE UPLOAD =====
+        function mostrarBotoesUpload() {
+            const botoes = document.querySelectorAll('button, .upload-button, [class*="carregar"], input[type="file"], .bg-white\\/80');
+            
+            botoes.forEach(el => {
+                if (el.textContent?.includes('Carregar') || 
+                    el.textContent?.includes('📸') ||
+                    el.textContent?.includes('Foto') ||
+                    el.textContent?.includes('Upload') ||
+                    el.className?.includes('carregar') ||
+                    el.className?.includes('upload') ||
+                    el.type === 'file') {
+                    
+                    el.style.display = 'flex';
+                    el.style.opacity = '1';
+                    el.style.visibility = 'visible';
+                    el.style.pointerEvents = 'auto';
+                }
+            });
+            
+            setTimeout(() => {
+                const botoesReact = document.querySelectorAll('button');
+                botoesReact.forEach(botao => {
+                    if (botao.textContent?.includes('Carregar Foto') || 
+                        botao.textContent?.includes('📸')) {
+                        botao.style.display = 'flex';
+                        botao.style.visibility = 'visible';
+                        
+                        const inputFile = botao.closest('div')?.querySelector('input[type="file"]');
+                        if (inputFile) {
+                            inputFile.style.display = 'block';
+                            inputFile.style.visibility = 'visible';
+                        }
+                    }
+                });
+            }, 500);
+        }
+        
+        function esconderBotoesUpload() {
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+            
+            if (!isAdmin) {
+                const botoes = document.querySelectorAll('button, .upload-button, [class*="carregar"], input[type="file"], .bg-white\\/80');
+                
+                botoes.forEach(el => {
+                    if (el.textContent?.includes('Carregar') || 
+                        el.textContent?.includes('📸') ||
+                        el.textContent?.includes('Foto') ||
+                        el.textContent?.includes('Upload') ||
+                        el.className?.includes('carregar') ||
+                        el.className?.includes('upload') ||
+                        el.type === 'file') {
+                        
+                        el.style.display = 'none';
+                        el.style.visibility = 'hidden';
+                        el.style.pointerEvents = 'none';
+                    }
+                });
+                
+                const botoesReact = document.querySelectorAll('button');
+                botoesReact.forEach(botao => {
+                    if (botao.textContent?.includes('Carregar Foto') || 
+                        botao.textContent?.includes('📸')) {
+                        botao.style.display = 'none';
+                        
+                        const inputFile = botao.closest('div')?.querySelector('input[type="file"]');
+                        if (inputFile) {
+                            inputFile.style.display = 'none';
+                        }
+                    }
+                });
+            } else {
+                const statusEl = document.getElementById('admin-status');
+                if (statusEl) {
+                    statusEl.innerHTML = '✅ Admin ativo';
+                    statusEl.style.color = 'green';
+                }
+                mostrarBotoesUpload();
+            }
+        }
+        
+        // ===== FIX: FORÇAR ATUALIZAÇÃO DAS IMAGENS =====
+        function forcarAtualizacaoImagens() {
+            const imagens = document.querySelectorAll('img');
+            imagens.forEach(img => {
+                const srcOriginal = img.src;
+                if (srcOriginal && srcOriginal.startsWith('data:image')) {
+                    if (srcOriginal.includes('?timestamp=')) {
+                        img.src = srcOriginal.split('?')[0];
+                    }
+                }
+            });
+        }
+        
+        // ===== VERIFICAR E CARREGAR IMAGENS SALVAS =====
+        function carregarImagensSalvas() {
+            Object.values(STORAGE_KEYS).forEach(key => {
+                const imagemSalva = localStorage.getItem(key);
+                if (imagemSalva) {
+                    window.dispatchEvent(new CustomEvent('imagemCarregada', { 
+                        detail: { key, imagemSalva } 
+                    }));
+                }
+            });
+        }
+        
+        // ===== OBSERVAR MUDANÇAS NO DOM =====
+        function observarBotoesReact() {
+            const observer = new MutationObserver(function(mutations) {
+                const isAdmin = localStorage.getItem('isAdmin') === 'true';
+                
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType === 1) {
+                                if (node.textContent?.includes('Carregar Foto') || 
+                                    node.textContent?.includes('📸')) {
+                                    if (!isAdmin) {
+                                        node.style.display = 'none';
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+        
+        // ===== INICIALIZAÇÃO =====
+        window.addEventListener('load', function() {
+            esconderBotoesUpload();
+            carregarImagensSalvas();
+            forcarAtualizacaoImagens();
+            observarBotoesReact();
+            
+            setTimeout(esconderBotoesUpload, 1000);
+            setTimeout(esconderBotoesUpload, 2000);
+            setTimeout(esconderBotoesUpload, 3000);
+        });
+        
+        // ===== EXPOR FUNÇÕES GLOBAIS =====
+        window.mostrarBotoesUpload = mostrarBotoesUpload;
+        window.esconderBotoesUpload = esconderBotoesUpload;
+        window.forcarAtualizacaoImagens = forcarAtualizacaoImagens;
+    </script>
 </body>
 </html>
