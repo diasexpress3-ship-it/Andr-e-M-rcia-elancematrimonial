@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { StorageKey } from '../types';
 
 interface ImageUploaderProps {
@@ -15,9 +15,23 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   label = "Carregar Foto" 
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // ✅ VERIFICA SE É ADMIN SEMPRE QUE O COMPONENTE RENDERIZA
+  useEffect(() => {
+    const checkAdmin = () => {
+      const admin = localStorage.getItem('isAdmin') === 'true';
+      setIsAdmin(admin);
+    };
+    
+    checkAdmin();
+    
+    // Observa mudanças no localStorage
+    window.addEventListener('storage', checkAdmin);
+    return () => window.removeEventListener('storage', checkAdmin);
+  }, []);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // ✅ FIX 1: Verifica se e.target e e.target.files existem
     if (!e.target || !e.target.files || e.target.files.length === 0) {
       return;
     }
@@ -28,16 +42,24 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const reader = new FileReader();
     
     reader.onload = (event: ProgressEvent<FileReader>) => {
-      // ✅ FIX 2: Verifica se event.target e event.target.result existem
       if (!event.target || !event.target.result) {
         return;
       }
 
       const imageData = event.target.result as string;
+      
+      // ✅ SALVA NO LOCALSTORAGE DO ADMIN
       onImageChange(imageData);
       
       try {
         localStorage.setItem(storageKey, imageData);
+        
+        // ✅ DISPARA EVENTO PARA ATUALIZAR TODAS AS ABAS
+        window.dispatchEvent(new CustomEvent('imagemAtualizada', { 
+          detail: { key: storageKey, imageData } 
+        }));
+        
+        alert('✅ Imagem atualizada com sucesso!');
       } catch (err) {
         console.error("Storage limit reached or error saving image", err);
         alert("Ops! A imagem é muito grande. Tente uma foto menor.");
@@ -45,11 +67,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     };
 
     reader.readAsDataURL(file);
-    
-    // ✅ FIX 3: Limpa o input para permitir re-upload do mesmo arquivo
     e.target.value = '';
   };
 
+  // ✅ SE NÃO FOR ADMIN, NÃO RENDERIZA NADA!
+  if (!isAdmin) {
+    return null;
+  }
+
+  // ✅ SÓ RENDERIZA O BOTÃO SE FOR ADMIN
   return (
     <div className="relative inline-block mt-4">
       <button
@@ -62,7 +88,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         </svg>
         <span>{label}</span>
       </button>
-      
       <input
         type="file"
         ref={fileInputRef}
