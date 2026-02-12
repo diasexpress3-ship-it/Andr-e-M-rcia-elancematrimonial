@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Countdown from './components/Countdown';
 import ImageUploader from './components/ImageUploader';
 import RSVPForm from './components/RSVPForm';
@@ -15,7 +14,67 @@ const App: React.FC = () => {
 
   const updateImage = (key: StorageKey, value: string) => {
     setImages(prev => ({ ...prev, [key]: value }));
+    localStorage.setItem(key, value);
+    
+    // ✅ DISPARA EVENTO PARA TODAS AS ABAS/NAVEGADORES
+    window.dispatchEvent(new CustomEvent('imagemAtualizada', { 
+      detail: { key, imageData: value } 
+    }));
   };
+
+  // ===== ✅ FIX 1: ESCUTA ATUALIZAÇÕES DE IMAGENS (MOMENTO) =====
+  useEffect(() => {
+    const handleImagemAtualizada = (e?: CustomEvent) => {
+      // Para imagem MOMENTO
+      const imagemSalvaMomento = localStorage.getItem('wedding_moment');
+      if (imagemSalvaMomento && imagemSalvaMomento !== images.wedding_moment) {
+        setImages(prev => ({ ...prev, wedding_moment: imagemSalvaMomento }));
+      }
+      
+      // Para imagem CAPA
+      const imagemSalvaCapa = localStorage.getItem('wedding_cover');
+      if (imagemSalvaCapa && imagemSalvaCapa !== images.wedding_cover) {
+        setImages(prev => ({ ...prev, wedding_cover: imagemSalvaCapa }));
+      }
+      
+      // Para imagem LOCAL
+      const imagemSalvaLocal = localStorage.getItem('wedding_location');
+      if (imagemSalvaLocal && imagemSalvaLocal !== images.wedding_location) {
+        setImages(prev => ({ ...prev, wedding_location: imagemSalvaLocal }));
+      }
+    };
+
+    // ✅ Carrega imagens salvas ao iniciar
+    handleImagemAtualizada();
+
+    // ✅ Escuta eventos personalizados
+    window.addEventListener('imagemAtualizada', handleImagemAtualizada as EventListener);
+    window.addEventListener('forcarAtualizacao', handleImagemAtualizada as EventListener);
+    window.addEventListener('storage', handleImagemAtualizada as EventListener);
+    
+    return () => {
+      window.removeEventListener('imagemAtualizada', handleImagemAtualizada as EventListener);
+      window.removeEventListener('forcarAtualizacao', handleImagemAtualizada as EventListener);
+      window.removeEventListener('storage', handleImagemAtualizada as EventListener);
+    };
+  }, [images.wedding_moment, images.wedding_cover, images.wedding_location]);
+
+  // ===== ✅ FIX 2: CARREGA IMAGENS DO LOCALSTORAGE AO INICIAR =====
+  useEffect(() => {
+    const carregarImagensIniciais = () => {
+      const capa = localStorage.getItem('wedding_cover');
+      const momento = localStorage.getItem('wedding_moment');
+      const local = localStorage.getItem('wedding_location');
+      
+      setImages({
+        wedding_cover: capa || PLACEHOLDERS.wedding_cover,
+        wedding_moment: momento || PLACEHOLDERS.wedding_moment,
+        wedding_location: local || PLACEHOLDERS.wedding_location,
+      });
+    };
+    
+    carregarImagensIniciais();
+  }, []);
 
   const handleOpenMap = () => {
     window.open('https://maps.app.goo.gl/2bkdZqCTxKwZDdAk9', '_blank');
