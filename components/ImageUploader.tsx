@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { StorageKey } from '../types';
 
@@ -9,17 +8,34 @@ interface ImageUploaderProps {
   label?: string;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ storageKey, currentImage, onImageChange, label = "Carregar Foto" }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ 
+  storageKey, 
+  currentImage, 
+  onImageChange, 
+  label = "Carregar Foto" 
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    // ✅ FIX 1: Verifica se e.target e e.target.files existem
+    if (!e.target || !e.target.files || e.target.files.length === 0) {
+      return;
+    }
+
+    const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    
+    reader.onload = (event: ProgressEvent<FileReader>) => {
+      // ✅ FIX 2: Verifica se event.target e event.target.result existem
+      if (!event.target || !event.target.result) {
+        return;
+      }
+
       const imageData = event.target.result as string;
       onImageChange(imageData);
+      
       try {
         localStorage.setItem(storageKey, imageData);
       } catch (err) {
@@ -27,7 +43,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ storageKey, currentImage,
         alert("Ops! A imagem é muito grande. Tente uma foto menor.");
       }
     };
+
     reader.readAsDataURL(file);
+    
+    // ✅ FIX 3: Limpa o input para permitir re-upload do mesmo arquivo
+    e.target.value = '';
   };
 
   return (
@@ -42,6 +62,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ storageKey, currentImage,
         </svg>
         <span>{label}</span>
       </button>
+      
       <input
         type="file"
         ref={fileInputRef}
