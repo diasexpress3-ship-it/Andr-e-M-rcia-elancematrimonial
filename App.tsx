@@ -4,6 +4,7 @@ import ImageUploader from './components/ImageUploader';
 import RSVPForm from './components/RSVPForm';
 import { PLACEHOLDERS } from './constants';
 import { StorageKey } from './types';
+import { fetchGlobalImages, testJSONBinConnection } from './services/imageService';
 
 const App: React.FC = () => {
   const [images, setImages] = useState({
@@ -11,74 +12,106 @@ const App: React.FC = () => {
     wedding_moment: localStorage.getItem('wedding_moment') || PLACEHOLDERS.wedding_moment,
     wedding_location: localStorage.getItem('wedding_location') || PLACEHOLDERS.wedding_location,
   });
+  const [loading, setLoading] = useState(true);
 
+  // ===== ✅ CARREGA IMAGENS GLOBAIS DO JSONBIN.IO =====
+  useEffect(() => {
+    const carregarImagensGlobais = async () => {
+      try {
+        setLoading(true);
+        
+        // Testa conexão com JSONBin
+        const conexaoOK = await testJSONBinConnection();
+        console.log('🌐 Conexão com JSONBin:', conexaoOK ? '✅' : '❌');
+        
+        if (conexaoOK) {
+          const imagensGlobais = await fetchGlobalImages();
+          
+          if (imagensGlobais) {
+            setImages({
+              wedding_cover: imagensGlobais.wedding_cover || images.wedding_cover,
+              wedding_moment: imagensGlobais.wedding_moment || images.wedding_moment,
+              wedding_location: imagensGlobais.wedding_location || images.wedding_location,
+            });
+            
+            // Salva no localStorage como cache
+            if (imagensGlobais.wedding_cover) {
+              localStorage.setItem('wedding_cover', imagensGlobais.wedding_cover);
+            }
+            if (imagensGlobais.wedding_moment) {
+              localStorage.setItem('wedding_moment', imagensGlobais.wedding_moment);
+            }
+            if (imagensGlobais.wedding_location) {
+              localStorage.setItem('wedding_location', imagensGlobais.wedding_location);
+            }
+            
+            console.log('✅ Imagens globais carregadas com sucesso!');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar imagens globais:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    carregarImagensGlobais();
+  }, []);
+
+  // ===== ✅ ATUALIZA IMAGEM LOCAL E GLOBAL =====
   const updateImage = (key: StorageKey, value: string) => {
     setImages(prev => ({ ...prev, [key]: value }));
     localStorage.setItem(key, value);
     
-    // ✅ DISPARA EVENTO PARA TODAS AS ABAS/NAVEGADORES
+    // Dispara evento para outras abas
     window.dispatchEvent(new CustomEvent('imagemAtualizada', { 
       detail: { key, imageData: value } 
     }));
   };
 
-  // ===== ✅ FIX 1: ESCUTA ATUALIZAÇÕES DE IMAGENS (MOMENTO) =====
+  // ===== ✅ ESCUTA ATUALIZAÇÕES DE IMAGENS =====
   useEffect(() => {
     const handleImagemAtualizada = (e?: CustomEvent) => {
-      // Para imagem MOMENTO
-      const imagemSalvaMomento = localStorage.getItem('wedding_moment');
-      if (imagemSalvaMomento && imagemSalvaMomento !== images.wedding_moment) {
-        setImages(prev => ({ ...prev, wedding_moment: imagemSalvaMomento }));
-      }
-      
-      // Para imagem CAPA
-      const imagemSalvaCapa = localStorage.getItem('wedding_cover');
-      if (imagemSalvaCapa && imagemSalvaCapa !== images.wedding_cover) {
-        setImages(prev => ({ ...prev, wedding_cover: imagemSalvaCapa }));
-      }
-      
-      // Para imagem LOCAL
-      const imagemSalvaLocal = localStorage.getItem('wedding_location');
-      if (imagemSalvaLocal && imagemSalvaLocal !== images.wedding_location) {
-        setImages(prev => ({ ...prev, wedding_location: imagemSalvaLocal }));
+      if (e?.detail) {
+        const { key, imageData } = e.detail;
+        setImages(prev => ({ ...prev, [key]: imageData }));
+      } else {
+        // Verifica todas as imagens no localStorage
+        const capa = localStorage.getItem('wedding_cover');
+        const momento = localStorage.getItem('wedding_moment');
+        const local = localStorage.getItem('wedding_location');
+        
+        setImages(prev => ({
+          wedding_cover: capa || prev.wedding_cover,
+          wedding_moment: momento || prev.wedding_moment,
+          wedding_location: local || prev.wedding_location,
+        }));
       }
     };
 
-    // ✅ Carrega imagens salvas ao iniciar
-    handleImagemAtualizada();
-
-    // ✅ Escuta eventos personalizados
     window.addEventListener('imagemAtualizada', handleImagemAtualizada as EventListener);
-    window.addEventListener('forcarAtualizacao', handleImagemAtualizada as EventListener);
     window.addEventListener('storage', handleImagemAtualizada as EventListener);
     
     return () => {
       window.removeEventListener('imagemAtualizada', handleImagemAtualizada as EventListener);
-      window.removeEventListener('forcarAtualizacao', handleImagemAtualizada as EventListener);
       window.removeEventListener('storage', handleImagemAtualizada as EventListener);
     };
-  }, [images.wedding_moment, images.wedding_cover, images.wedding_location]);
-
-  // ===== ✅ FIX 2: CARREGA IMAGENS DO LOCALSTORAGE AO INICIAR =====
-  useEffect(() => {
-    const carregarImagensIniciais = () => {
-      const capa = localStorage.getItem('wedding_cover');
-      const momento = localStorage.getItem('wedding_moment');
-      const local = localStorage.getItem('wedding_location');
-      
-      setImages({
-        wedding_cover: capa || PLACEHOLDERS.wedding_cover,
-        wedding_moment: momento || PLACEHOLDERS.wedding_moment,
-        wedding_location: local || PLACEHOLDERS.wedding_location,
-      });
-    };
-    
-    carregarImagensIniciais();
   }, []);
 
   const handleOpenMap = () => {
     window.open('https://maps.app.goo.gl/2bkdZqCTxKwZDdAk9', '_blank');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fff9f0]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#2c1810] font-serif text-xl">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-20">
