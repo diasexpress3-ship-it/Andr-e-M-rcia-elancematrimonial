@@ -3,8 +3,24 @@ import MenuSection from '../components/MenuSection';
 import { fetchMenu } from '../services/menuService';
 import { Link } from 'react-router-dom';
 
+// Interfaces para tipagem
+interface ItemMenu {
+  id: string;
+  nome: string;
+  descricao: string;
+  categoria: 'welcome-drink' | 'entrada' | 'principal' | 'sobremesa' | 'bebidas';
+  icone?: string;
+}
+
+interface MenuData {
+  welcomeDrink: ItemMenu[];
+  menuCasual: ItemMenu[];
+  menuOficial: ItemMenu[];
+  ultimaAtualizacao: string;
+}
+
 const MenuPage: React.FC = () => {
-  const [menu, setMenu] = useState(null);
+  const [menu, setMenu] = useState<MenuData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -54,7 +70,7 @@ const MenuPage: React.FC = () => {
         </div>
 
         {/* Welcome Drink */}
-        {menu?.welcomeDrink?.length > 0 && (
+        {menu?.welcomeDrink && menu.welcomeDrink.length > 0 && (
           <div className="bg-white rounded-3xl p-8 mb-8 shadow-xl">
             <MenuSection 
               titulo="🥂 Welcome Drink" 
@@ -65,29 +81,50 @@ const MenuPage: React.FC = () => {
         )}
 
         {/* Menu Casual */}
-        {menu?.menuCasual?.length > 0 && (
+        {menu?.menuCasual && menu.menuCasual.length > 0 && (
           <div className="bg-white rounded-3xl p-8 mb-8 shadow-xl">
             <h2 className="font-serif text-3xl text-[#2c1810] mb-6 border-b-2 border-[#d4af37]/30 pb-2">
               Menu Casual
             </h2>
             <p className="text-sm text-gray-500 mb-6 italic">Opção mais simples e descontraída</p>
-            <MenuSection titulo="Entradas" itens={menu.menuCasual.filter(i => i.categoria === 'entrada')} />
-            <MenuSection titulo="Prato Principal" itens={menu.menuCasual.filter(i => i.categoria === 'principal')} />
-            <MenuSection titulo="Sobremesa" itens={menu.menuCasual.filter(i => i.categoria === 'sobremesa')} />
+            <MenuSection 
+              titulo="Entradas" 
+              itens={menu.menuCasual.filter((item: ItemMenu) => item.categoria === 'entrada')} 
+            />
+            <MenuSection 
+              titulo="Prato Principal" 
+              itens={menu.menuCasual.filter((item: ItemMenu) => item.categoria === 'principal')} 
+            />
+            <MenuSection 
+              titulo="Sobremesa" 
+              itens={menu.menuCasual.filter((item: ItemMenu) => item.categoria === 'sobremesa')} 
+            />
           </div>
         )}
 
         {/* Menu Oficial */}
-        {menu?.menuOficial?.length > 0 && (
+        {menu?.menuOficial && menu.menuOficial.length > 0 && (
           <div className="bg-white rounded-3xl p-8 shadow-xl border-2 border-[#d4af37]">
             <h2 className="font-serif text-3xl text-[#2c1810] mb-6 border-b-2 border-[#d4af37]/30 pb-2">
               Menu Oficial
             </h2>
             <p className="text-sm text-gray-500 mb-6 italic">Opção completa e sofisticada</p>
-            <MenuSection titulo="Entradas" itens={menu.menuOficial.filter(i => i.categoria === 'entrada')} />
-            <MenuSection titulo="Prato Principal" itens={menu.menuOficial.filter(i => i.categoria === 'principal')} />
-            <MenuSection titulo="Sobremesa" itens={menu.menuOficial.filter(i => i.categoria === 'sobremesa')} />
-            <MenuSection titulo="Bebidas" itens={menu.menuOficial.filter(i => i.categoria === 'bebidas')} />
+            <MenuSection 
+              titulo="Entradas" 
+              itens={menu.menuOficial.filter((item: ItemMenu) => item.categoria === 'entrada')} 
+            />
+            <MenuSection 
+              titulo="Prato Principal" 
+              itens={menu.menuOficial.filter((item: ItemMenu) => item.categoria === 'principal')} 
+            />
+            <MenuSection 
+              titulo="Sobremesa" 
+              itens={menu.menuOficial.filter((item: ItemMenu) => item.categoria === 'sobremesa')} 
+            />
+            <MenuSection 
+              titulo="Bebidas" 
+              itens={menu.menuOficial.filter((item: ItemMenu) => item.categoria === 'bebidas')} 
+            />
           </div>
         )}
 
