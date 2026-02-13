@@ -3,8 +3,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Countdown from './components/Countdown';
 import ImageUploader from './components/ImageUploader';
 import RSVPForm from './components/RSVPForm';
-import BotaoPresentes from './components/BotaoPresentes';
-import BotaoMenu from './components/BotaoMenu';
+import BotaoPresentesAnimado from './components/BotaoPresentesAnimado';
+import BotaoMenuAnimado from './components/BotaoMenuAnimado';
+import BotaoPresentesCompacto from './components/BotaoPresentesCompacto';
 import PresentesPage from './pages/Presentes';
 import MenuPage from './pages/Menu';
 import { PLACEHOLDERS } from './constants';
@@ -294,9 +295,10 @@ const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Botões flutuantes */}
-      <BotaoPresentes />
-      <BotaoMenu />
+      {/* Botões flutuantes animados */}
+      <BotaoPresentesAnimado />
+      <BotaoMenuAnimado />
+      <BotaoPresentesCompacto />
     </>
   );
 
