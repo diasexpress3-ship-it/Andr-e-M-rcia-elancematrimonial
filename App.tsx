@@ -14,15 +14,12 @@ const App: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // ===== ✅ CARREGA IMAGENS GLOBAIS DO JSONBIN.IO =====
+  // Carrega imagens globais do JSONBin.io
   useEffect(() => {
     const carregarImagensGlobais = async () => {
       try {
         setLoading(true);
-        
-        // Testa conexão com JSONBin
         const conexaoOK = await testJSONBinConnection();
-        console.log('🌐 Conexão com JSONBin:', conexaoOK ? '✅' : '❌');
         
         if (conexaoOK) {
           const imagensGlobais = await fetchGlobalImages();
@@ -34,22 +31,13 @@ const App: React.FC = () => {
               wedding_location: imagensGlobais.wedding_location || images.wedding_location,
             });
             
-            // Salva no localStorage como cache
-            if (imagensGlobais.wedding_cover) {
-              localStorage.setItem('wedding_cover', imagensGlobais.wedding_cover);
-            }
-            if (imagensGlobais.wedding_moment) {
-              localStorage.setItem('wedding_moment', imagensGlobais.wedding_moment);
-            }
-            if (imagensGlobais.wedding_location) {
-              localStorage.setItem('wedding_location', imagensGlobais.wedding_location);
-            }
-            
-            console.log('✅ Imagens globais carregadas com sucesso!');
+            if (imagensGlobais.wedding_cover) localStorage.setItem('wedding_cover', imagensGlobais.wedding_cover);
+            if (imagensGlobais.wedding_moment) localStorage.setItem('wedding_moment', imagensGlobais.wedding_moment);
+            if (imagensGlobais.wedding_location) localStorage.setItem('wedding_location', imagensGlobais.wedding_location);
           }
         }
       } catch (error) {
-        console.error('❌ Erro ao carregar imagens globais:', error);
+        console.error('Erro ao carregar imagens globais:', error);
       } finally {
         setLoading(false);
       }
@@ -58,34 +46,20 @@ const App: React.FC = () => {
     carregarImagensGlobais();
   }, []);
 
-  // ===== ✅ ATUALIZA IMAGEM LOCAL E GLOBAL =====
   const updateImage = (key: StorageKey, value: string) => {
     setImages(prev => ({ ...prev, [key]: value }));
     localStorage.setItem(key, value);
-    
-    // Dispara evento para outras abas
     window.dispatchEvent(new CustomEvent('imagemAtualizada', { 
       detail: { key, imageData: value } 
     }));
   };
 
-  // ===== ✅ ESCUTA ATUALIZAÇÕES DE IMAGENS =====
+  // Escuta atualizações de imagens
   useEffect(() => {
     const handleImagemAtualizada = (e?: CustomEvent) => {
       if (e?.detail) {
         const { key, imageData } = e.detail;
         setImages(prev => ({ ...prev, [key]: imageData }));
-      } else {
-        // Verifica todas as imagens no localStorage
-        const capa = localStorage.getItem('wedding_cover');
-        const momento = localStorage.getItem('wedding_moment');
-        const local = localStorage.getItem('wedding_location');
-        
-        setImages(prev => ({
-          wedding_cover: capa || prev.wedding_cover,
-          wedding_moment: momento || prev.wedding_moment,
-          wedding_location: local || prev.wedding_location,
-        }));
       }
     };
 
@@ -115,7 +89,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20">
-      {/* Header Section - Layout replicado da imagem com data 2026 */}
+      {/* Header Section */}
       <header className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center text-center px-4">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 brightness-[0.7] animate-kenburns" 
@@ -154,7 +128,7 @@ const App: React.FC = () => {
              <ImageUploader 
                 storageKey="wedding_cover" 
                 currentImage={images.wedding_cover} 
-                onImageChange={(img) => updateImage('wedding_cover', img)}
+                onImageChange={(img: string) => updateImage('wedding_cover', img)}
                 label="Mudar Foto de Capa"
               />
           </div>
@@ -189,7 +163,7 @@ const App: React.FC = () => {
                <ImageUploader 
                 storageKey="wedding_moment" 
                 currentImage={images.wedding_moment} 
-                onImageChange={(img) => updateImage('wedding_moment', img)}
+                onImageChange={(img: string) => updateImage('wedding_moment', img)}
                 label="Mudar Imagem Especial"
               />
             </div>
@@ -222,7 +196,7 @@ const App: React.FC = () => {
                 <ImageUploader 
                   storageKey="wedding_location" 
                   currentImage={images.wedding_location} 
-                  onImageChange={(img) => updateImage('wedding_location', img)}
+                  onImageChange={(img: string) => updateImage('wedding_location', img)}
                   label="Mudar Foto do Salão"
                 />
               </div>
@@ -273,13 +247,12 @@ const App: React.FC = () => {
           <p className="mt-12 text-[10px] text-[#2c1810]/30 uppercase tracking-widest font-semibold">Feito com amor • Maputo, Moçambique</p>
         </div>
 
-        {/* Developer Credit - Canto Inferior Esquerdo */}
+        {/* Developer Credit */}
         <div className="absolute bottom-6 left-6 text-left opacity-80 hover:opacity-100 transition-all duration-500 cursor-default hidden md:block bg-orange-500 p-3 rounded-lg shadow-md">
           <p className="text-[10px] uppercase tracking-wider text-white font-bold">Developer (Vicente Dias) Tech</p>
           <p className="text-[9px] uppercase tracking-[0.2em] text-black font-black mt-0.5">CEO and Founder - DEX</p>
         </div>
         
-        {/* Mobile Developer Credit */}
         <div className="md:hidden mt-16 text-center opacity-80 bg-orange-500 p-4 mx-6 rounded-xl shadow-md">
           <p className="text-[9px] uppercase tracking-wider text-white font-bold">Developer (Vicente Dias) Tech</p>
           <p className="text-[8px] uppercase tracking-[0.2em] text-black font-black mt-1">CEO and Founder - DEX</p>
