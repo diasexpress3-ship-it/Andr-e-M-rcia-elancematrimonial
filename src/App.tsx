@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Countdown from './components/Countdown';
 import ImageUploader from './components/ImageUploader';
 import RSVPForm from './components/RSVPForm';
+import BotaoPresentes from './components/BotaoPresentes';
+import BotaoMenu from './components/BotaoMenu';
+import PresentesPage from './pages/Presentes';
+import MenuPage from './pages/Menu';
 import { PLACEHOLDERS } from './constants';
 import { StorageKey } from './types';
 import { fetchGlobalImages, testJSONBinConnection } from './services/imageService';
@@ -15,7 +20,7 @@ const App: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // ===== ✅ CORREÇÃO 1: CARREGAR IMAGENS DA NUVEM COM LOGS DETALHADOS =====
+  // ===== CARREGAR IMAGENS DA NUVEM =====
   useEffect(() => {
     const carregarImagensGlobais = async () => {
       try {
@@ -30,14 +35,12 @@ const App: React.FC = () => {
           console.log('📦 Dados brutos recebidos da nuvem:', imagensGlobais);
           
           if (imagensGlobais) {
-            // ✅ ATUALIZA O ESTADO COM OS DADOS DA NUVEM
             setImages(prev => ({
               wedding_cover: imagensGlobais.wedding_cover || prev.wedding_cover,
               wedding_moment: imagensGlobais.wedding_moment || prev.wedding_moment,
               wedding_location: imagensGlobais.wedding_location || prev.wedding_location,
             }));
             
-            // ✅ SALVA NO LOCALSTORAGE COMO CACHE
             if (imagensGlobais.wedding_cover) {
               localStorage.setItem('wedding_cover', imagensGlobais.wedding_cover);
               console.log('💾 Capa salva no localStorage');
@@ -52,8 +55,6 @@ const App: React.FC = () => {
             }
             
             console.log('✅ Estado atualizado com imagens da nuvem!');
-          } else {
-            console.warn('⚠️ Nenhuma imagem encontrada na nuvem. Usando localStorage/placeholders.');
           }
         }
       } catch (error) {
@@ -64,11 +65,10 @@ const App: React.FC = () => {
     };
     
     carregarImagensGlobais();
-  }, []); // Array vazio = executa apenas 1 vez
+  }, []);
 
-  // ===== ✅ CORREÇÃO 2: FALLBACK PARA LOCALSTORAGE =====
+  // ===== FALLBACK PARA LOCALSTORAGE =====
   useEffect(() => {
-    // Se as imagens ainda são placeholders, tenta carregar do localStorage
     if (images.wedding_moment.includes('placehold') || 
         images.wedding_location.includes('placehold') ||
         images.wedding_cover.includes('placehold')) {
@@ -84,12 +84,8 @@ const App: React.FC = () => {
         wedding_moment: momento || prev.wedding_moment,
         wedding_location: local || prev.wedding_location,
       }));
-      
-      if (capa || momento || local) {
-        console.log('✅ Imagens carregadas do localStorage (fallback)');
-      }
     }
-  }, []); // Executa apenas 1 vez também
+  }, []);
 
   // ===== ATUALIZAR IMAGEM =====
   const updateImage = (key: StorageKey, value: string) => {
@@ -97,7 +93,6 @@ const App: React.FC = () => {
     localStorage.setItem(key, value);
     console.log(`📤 Imagem ${key} atualizada localmente`);
     
-    // Dispara evento para outras abas
     window.dispatchEvent(new CustomEvent('imagemAtualizada', { 
       detail: { key, imageData: value } 
     }));
@@ -126,19 +121,9 @@ const App: React.FC = () => {
     window.open('https://maps.app.goo.gl/2bkdZqCTxKwZDdAk9', '_blank');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fff9f0]">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#2c1810] font-serif text-xl">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen pb-20">
+  // ===== COMPONENTE DA PÁGINA PRINCIPAL =====
+  const HomePage = () => (
+    <>
       {/* Header Section - Capa */}
       <header className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center text-center px-4">
         <div 
@@ -308,7 +293,32 @@ const App: React.FC = () => {
           <p className="text-[8px] uppercase tracking-[0.2em] text-black font-black mt-1">CEO and Founder - DEX</p>
         </div>
       </footer>
-    </div>
+
+      {/* Botões flutuantes */}
+      <BotaoPresentes />
+      <BotaoMenu />
+    </>
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fff9f0]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#2c1810] font-serif text-xl">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/presentes" element={<PresentesPage />} />
+        <Route path="/menu" element={<MenuPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
