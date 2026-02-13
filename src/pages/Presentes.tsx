@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PresenteCard from '../components/PresenteCard';
-import { fetchPresentes, atualizarQuantidadePresente } from '../services/presentesService';
+import { fetchPresentes, selecionarPresente } from '../services/presentesService';
 import { Link } from 'react-router-dom';
 
-// Interface para tipagem do presente
 interface Presente {
   id: string;
   nome: string;
@@ -11,7 +10,7 @@ interface Presente {
   imagem: string;
   quantidadeTotal: number;
   quantidadeEscolhida: number;
-  linkCompra?: string;
+  selecionadoPor?: { nome: string; data: string; quantidade: number }[];
   categoria: 'casa' | 'decoracao' | 'eletro' | 'outros';
 }
 
@@ -21,45 +20,66 @@ const PresentesPage: React.FC = () => {
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('todos');
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Verificar se é admin
   useEffect(() => {
-    const checkAdmin = () => {
-      const admin = localStorage.getItem('isAdmin') === 'true';
-      setIsAdmin(admin);
-    };
-    checkAdmin();
+    const admin = localStorage.getItem('isAdmin') === 'true';
+    setIsAdmin(admin);
+  }, []);
 
+  // Carregar presentes
+  useEffect(() => {
     const carregarPresentes = async () => {
-      const dados = await fetchPresentes();
-      if (dados && dados.presentes) {
-        setPresentes(dados.presentes);
+      try {
+        setLoading(true);
+        const dados = await fetchPresentes();
+        if (dados && dados.presentes) {
+          setPresentes(dados.presentes);
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+    
     carregarPresentes();
   }, []);
 
-  const handleSelecionarPresente = async (id: string, quantidade: number) => {
-    const success = await atualizarQuantidadePresente(id, quantidade);
-    if (success) {
-      const dados = await fetchPresentes();
-      if (dados && dados.presentes) {
-        setPresentes(dados.presentes);
+  const handleSelecionarPresente = async (id: string, quantidade: number, nomeConvidado: string) => {
+    try {
+      const success = await selecionarPresente(id, quantidade, nomeConvidado);
+      if (success) {
+        // Recarregar dados
+        const dados = await fetchPresentes();
+        if (dados && dados.presentes) {
+          setPresentes(dados.presentes);
+        }
       }
-      alert('✅ Presente selecionado com sucesso! Obrigado!');
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('❌ Erro ao selecionar presente. Tente novamente.');
     }
   };
 
   const categorias = [
     { id: 'todos', nome: 'Todos' },
-    { id: 'casa', nome: 'Casa' },
-    { id: 'decoracao', nome: 'Decoração' },
     { id: 'eletro', nome: 'Eletrodomésticos' },
+    { id: 'casa', nome: 'Casa & Cozinha' },
+    { id: 'decoracao', nome: 'Decoração' },
     { id: 'outros', nome: 'Outros' }
   ];
 
   const presentesFiltrados = categoriaSelecionada === 'todos'
     ? presentes
     : presentes.filter(p => p.categoria === categoriaSelecionada);
+
+  const totais = {
+    todos: presentes.length,
+    eletro: presentes.filter(p => p.categoria === 'eletro').length,
+    casa: presentes.filter(p => p.categoria === 'casa').length,
+    decoracao: presentes.filter(p => p.categoria === 'decoracao').length,
+    outros: presentes.filter(p => p.categoria === 'outros').length
+  };
 
   if (loading) {
     return (
@@ -79,8 +99,8 @@ const PresentesPage: React.FC = () => {
         <div className="text-center mb-12">
           <h1 className="text-5xl md:text-6xl font-serif text-[#2c1810] mb-4">Lista de Presentes</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Selecione os presentes que gostaria de oferecer aos noivos. 
-            Cada presente pode ser escolhido por mais de um convidado.
+            Escolha um ou mais presentes para oferecer aos noivos. 
+            {!isAdmin && ' Seu nome será registrado para que saibamos quem presenteou cada item.'}
           </p>
           <Link 
             to="/"
@@ -90,53 +110,52 @@ const PresentesPage: React.FC = () => {
           </Link>
         </div>
 
-        {/* Filtros */}
-        {!isAdmin && (
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {categorias.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setCategoriaSelecionada(cat.id)}
-                className={`px-6 py-2 rounded-full transition-all ${
-                  categoriaSelecionada === cat.id
-                    ? 'bg-[#d4af37] text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {cat.nome}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Grid de Presentes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {presentesFiltrados.map(presente => (
-            <PresenteCard
-              key={presente.id}
-              id={presente.id}
-              nome={presente.nome}
-              descricao={presente.descricao}
-              imagem={presente.imagem}
-              quantidadeTotal={presente.quantidadeTotal}
-              quantidadeEscolhida={presente.quantidadeEscolhida}
-              onSelecionar={handleSelecionarPresente}
-            />
+        {/* Filtros com contadores */}
+        <div className="flex flex-wrap justify-center gap-3 mb-12">
+          {categorias.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setCategoriaSelecionada(cat.id)}
+              className={`px-6 py-2 rounded-full transition-all ${
+                categoriaSelecionada === cat.id
+                  ? 'bg-[#d4af37] text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {cat.nome} ({totais[cat.id as keyof typeof totais]})
+            </button>
           ))}
         </div>
 
-        {presentesFiltrados.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-2xl text-gray-500">Nenhum presente nesta categoria.</p>
+        {/* Grid de Presentes */}
+        {presentesFiltrados.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {presentesFiltrados.map(presente => (
+              <PresenteCard
+                key={presente.id}
+                {...presente}
+                onSelecionar={handleSelecionarPresente}
+                isAdmin={isAdmin}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-white rounded-3xl shadow-xl">
+            <p className="text-2xl text-gray-500 mb-4">Nenhum presente nesta categoria.</p>
           </div>
         )}
 
-        {/* Painel Admin */}
+        {/* Rodapé administrativo */}
         {isAdmin && (
-          <div className="mt-16 p-8 bg-white rounded-3xl shadow-xl border-2 border-[#d4af37] border-dashed">
-            <h2 className="text-2xl font-serif text-[#2c1810] mb-4">Painel Admin - Gerenciar Presentes</h2>
-            <p className="mb-4">Área restrita para administradores gerenciarem a lista de presentes.</p>
-            <p className="text-sm text-gray-500">Para adicionar/editar presentes, use o console do navegador com os comandos adequados.</p>
+          <div className="mt-16 p-8 bg-white rounded-3xl shadow-xl border-2 border-[#d4af37]">
+            <h2 className="text-2xl font-serif text-[#2c1810] mb-4">📊 Painel Administrativo</h2>
+            <p className="mb-2">Total de presentes: <strong>{presentes.length}</strong></p>
+            <p className="mb-4">Total de itens já escolhidos: <strong>
+              {presentes.reduce((acc, p) => acc + p.quantidadeEscolhida, 0)}
+            </strong></p>
+            <p className="text-sm text-gray-500">
+              Apenas você vê a lista de convidados que escolheram cada presente.
+            </p>
           </div>
         )}
       </div>
