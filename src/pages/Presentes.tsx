@@ -3,8 +3,20 @@ import PresenteCard from '../components/PresenteCard';
 import { fetchPresentes, atualizarQuantidadePresente } from '../services/presentesService';
 import { Link } from 'react-router-dom';
 
+// Interface para tipagem do presente
+interface Presente {
+  id: string;
+  nome: string;
+  descricao: string;
+  imagem: string;
+  quantidadeTotal: number;
+  quantidadeEscolhida: number;
+  linkCompra?: string;
+  categoria: 'casa' | 'decoracao' | 'eletro' | 'outros';
+}
+
 const PresentesPage: React.FC = () => {
-  const [presentes, setPresentes] = useState([]);
+  const [presentes, setPresentes] = useState<Presente[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('todos');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -18,7 +30,7 @@ const PresentesPage: React.FC = () => {
 
     const carregarPresentes = async () => {
       const dados = await fetchPresentes();
-      if (dados) {
+      if (dados && dados.presentes) {
         setPresentes(dados.presentes);
       }
       setLoading(false);
@@ -29,9 +41,10 @@ const PresentesPage: React.FC = () => {
   const handleSelecionarPresente = async (id: string, quantidade: number) => {
     const success = await atualizarQuantidadePresente(id, quantidade);
     if (success) {
-      // Recarregar dados
       const dados = await fetchPresentes();
-      if (dados) setPresentes(dados.presentes);
+      if (dados && dados.presentes) {
+        setPresentes(dados.presentes);
+      }
       alert('✅ Presente selecionado com sucesso! Obrigado!');
     }
   };
@@ -101,7 +114,12 @@ const PresentesPage: React.FC = () => {
           {presentesFiltrados.map(presente => (
             <PresenteCard
               key={presente.id}
-              {...presente}
+              id={presente.id}
+              nome={presente.nome}
+              descricao={presente.descricao}
+              imagem={presente.imagem}
+              quantidadeTotal={presente.quantidadeTotal}
+              quantidadeEscolhida={presente.quantidadeEscolhida}
               onSelecionar={handleSelecionarPresente}
             />
           ))}
@@ -113,7 +131,7 @@ const PresentesPage: React.FC = () => {
           </div>
         )}
 
-        {/* Painel Admin (visível apenas para admin) */}
+        {/* Painel Admin */}
         {isAdmin && (
           <div className="mt-16 p-8 bg-white rounded-3xl shadow-xl border-2 border-[#d4af37] border-dashed">
             <h2 className="text-2xl font-serif text-[#2c1810] mb-4">Painel Admin - Gerenciar Presentes</h2>
