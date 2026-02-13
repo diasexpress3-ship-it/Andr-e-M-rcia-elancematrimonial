@@ -7,6 +7,7 @@ import { StorageKey } from './types';
 import { fetchGlobalImages, testJSONBinConnection } from './services/imageService';
 
 const App: React.FC = () => {
+  // ===== ESTADO INICIAL =====
   const [images, setImages] = useState({
     wedding_cover: localStorage.getItem('wedding_cover') || PLACEHOLDERS.wedding_cover,
     wedding_moment: localStorage.getItem('wedding_moment') || PLACEHOLDERS.wedding_moment,
@@ -14,52 +15,101 @@ const App: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Carrega imagens globais do JSONBin.io
+  // ===== ✅ CORREÇÃO 1: CARREGAR IMAGENS DA NUVEM COM LOGS DETALHADOS =====
   useEffect(() => {
     const carregarImagensGlobais = async () => {
       try {
         setLoading(true);
+        console.log('🚀 Iniciando carga de imagens da nuvem...');
+        
         const conexaoOK = await testJSONBinConnection();
+        console.log('🔌 Conexão com JSONBin:', conexaoOK ? '✅' : '❌');
         
         if (conexaoOK) {
           const imagensGlobais = await fetchGlobalImages();
+          console.log('📦 Dados brutos recebidos da nuvem:', imagensGlobais);
           
           if (imagensGlobais) {
-            setImages({
-              wedding_cover: imagensGlobais.wedding_cover || images.wedding_cover,
-              wedding_moment: imagensGlobais.wedding_moment || images.wedding_moment,
-              wedding_location: imagensGlobais.wedding_location || images.wedding_location,
-            });
+            // ✅ ATUALIZA O ESTADO COM OS DADOS DA NUVEM
+            setImages(prev => ({
+              wedding_cover: imagensGlobais.wedding_cover || prev.wedding_cover,
+              wedding_moment: imagensGlobais.wedding_moment || prev.wedding_moment,
+              wedding_location: imagensGlobais.wedding_location || prev.wedding_location,
+            }));
             
-            if (imagensGlobais.wedding_cover) localStorage.setItem('wedding_cover', imagensGlobais.wedding_cover);
-            if (imagensGlobais.wedding_moment) localStorage.setItem('wedding_moment', imagensGlobais.wedding_moment);
-            if (imagensGlobais.wedding_location) localStorage.setItem('wedding_location', imagensGlobais.wedding_location);
+            // ✅ SALVA NO LOCALSTORAGE COMO CACHE
+            if (imagensGlobais.wedding_cover) {
+              localStorage.setItem('wedding_cover', imagensGlobais.wedding_cover);
+              console.log('💾 Capa salva no localStorage');
+            }
+            if (imagensGlobais.wedding_moment) {
+              localStorage.setItem('wedding_moment', imagensGlobais.wedding_moment);
+              console.log('💾 Momento salvo no localStorage');
+            }
+            if (imagensGlobais.wedding_location) {
+              localStorage.setItem('wedding_location', imagensGlobais.wedding_location);
+              console.log('💾 Local salvo no localStorage');
+            }
+            
+            console.log('✅ Estado atualizado com imagens da nuvem!');
+          } else {
+            console.warn('⚠️ Nenhuma imagem encontrada na nuvem. Usando localStorage/placeholders.');
           }
         }
       } catch (error) {
-        console.error('Erro ao carregar imagens globais:', error);
+        console.error('❌ Erro crítico ao carregar imagens globais:', error);
       } finally {
         setLoading(false);
       }
     };
     
     carregarImagensGlobais();
-  }, []);
+  }, []); // Array vazio = executa apenas 1 vez
 
+  // ===== ✅ CORREÇÃO 2: FALLBACK PARA LOCALSTORAGE =====
+  useEffect(() => {
+    // Se as imagens ainda são placeholders, tenta carregar do localStorage
+    if (images.wedding_moment.includes('placehold') || 
+        images.wedding_location.includes('placehold') ||
+        images.wedding_cover.includes('placehold')) {
+      
+      console.log('🔄 Fallback: tentando carregar imagens do localStorage...');
+      
+      const capa = localStorage.getItem('wedding_cover');
+      const momento = localStorage.getItem('wedding_moment');
+      const local = localStorage.getItem('wedding_location');
+      
+      setImages(prev => ({
+        wedding_cover: capa || prev.wedding_cover,
+        wedding_moment: momento || prev.wedding_moment,
+        wedding_location: local || prev.wedding_location,
+      }));
+      
+      if (capa || momento || local) {
+        console.log('✅ Imagens carregadas do localStorage (fallback)');
+      }
+    }
+  }, []); // Executa apenas 1 vez também
+
+  // ===== ATUALIZAR IMAGEM =====
   const updateImage = (key: StorageKey, value: string) => {
     setImages(prev => ({ ...prev, [key]: value }));
     localStorage.setItem(key, value);
+    console.log(`📤 Imagem ${key} atualizada localmente`);
+    
+    // Dispara evento para outras abas
     window.dispatchEvent(new CustomEvent('imagemAtualizada', { 
       detail: { key, imageData: value } 
     }));
   };
 
-  // Escuta atualizações de imagens
+  // ===== ESCUTAR ATUALIZAÇÕES =====
   useEffect(() => {
     const handleImagemAtualizada = (e?: CustomEvent) => {
       if (e?.detail) {
         const { key, imageData } = e.detail;
         setImages(prev => ({ ...prev, [key]: imageData }));
+        console.log(`🔄 Imagem ${key} sincronizada entre abas`);
       }
     };
 
@@ -89,7 +139,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20">
-      {/* Header Section */}
+      {/* Header Section - Capa */}
       <header className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center text-center px-4">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 brightness-[0.7] animate-kenburns" 
@@ -150,13 +200,13 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Seção da Foto Especial */}
+      {/* Seção da Foto Especial - MOMENTO */}
       <section className="max-w-6xl mx-auto px-6 mb-32">
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row border border-[#d4af37]/10 reveal-up">
           <div className="md:w-3/5 relative h-[500px] md:h-auto overflow-hidden">
             <img 
               src={images.wedding_moment} 
-              alt="Momento Especial" 
+              alt="Momento Especial do Casal" 
               className="w-full h-full object-cover animate-sway-all"
             />
             <div className="absolute bottom-6 left-6 z-20">
@@ -189,7 +239,7 @@ const App: React.FC = () => {
             <div className="w-full lg:w-3/5 relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-[#fff9f0] animate-sway-all">
                <img 
                 src={images.wedding_location} 
-                alt="Local do Evento" 
+                alt="Salão Enigma - Local do Evento" 
                 className="w-full h-[500px] object-cover"
               />
               <div className="absolute top-4 left-4 z-20">
