@@ -65,6 +65,20 @@
             animation: pulse-gold 2s infinite;
         }
 
+        @keyframes slideIn {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
         /* Estilo para o painel admin */
         #admin-panel {
             transition: all 0.3s ease;
@@ -106,7 +120,7 @@
 
     <div id="root"></div>
     
-    <!-- ✅ LINHA CORRIGIDA - AGORA APONTA PARA /src/index.tsx -->
+    <!-- ✅ Entry point do React -->
     <script type="module" src="/src/index.tsx"></script>
     
     <script>
