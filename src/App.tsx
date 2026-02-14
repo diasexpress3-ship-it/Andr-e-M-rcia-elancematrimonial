@@ -8,6 +8,7 @@ import BotaoMenuAnimado from './components/BotaoMenuAnimado';
 import BotaoPresentesCompacto from './components/BotaoPresentesCompacto';
 import PresentesPage from './pages/Presentes';
 import MenuPage from './pages/Menu';
+import ProgramaDia from './components/ProgramaDia'; // ✅ NOVO COMPONENTE
 import { PLACEHOLDERS } from './constants';
 import { StorageKey } from './types';
 import { fetchGlobalImages, testJSONBinConnection } from './services/imageService';
@@ -185,6 +186,9 @@ const App: React.FC = () => {
           </p>
         </div>
       </section>
+
+      {/* ===== NOVA SEÇÃO: PROGRAMA DO DIA / CRONOGRAMA ===== */}
+      <ProgramaDia />
 
       {/* Seção da Foto Especial - MOMENTO */}
       <section className="max-w-6xl mx-auto px-6 mb-32">
