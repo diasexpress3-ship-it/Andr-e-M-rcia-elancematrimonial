@@ -6,9 +6,10 @@ import RSVPForm from './components/RSVPForm';
 import BotaoPresentesAnimado from './components/BotaoPresentesAnimado';
 import BotaoMenuAnimado from './components/BotaoMenuAnimado';
 import BotaoPresentesCompacto from './components/BotaoPresentesCompacto';
+import BotoesCronogramaAnimado from './components/BotoesCronogramaAnimado';
 import PresentesPage from './pages/Presentes';
 import MenuPage from './pages/Menu';
-import ProgramaDia from './components/ProgramaDia'; // ✅ NOVO COMPONENTE
+import ProgramaDia from './components/ProgramaDia';
 import { PLACEHOLDERS } from './constants';
 import { StorageKey } from './types';
 import { fetchGlobalImages, testJSONBinConnection } from './services/imageService';
@@ -172,7 +173,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Seção de Introdução */}
+      {/* Seção de Introdução - O Início do Nosso Sempre */}
       <section className="max-w-4xl mx-auto py-32 px-6 text-center overflow-hidden">
         <div className="animate-sway-x inline-block mb-8">
             <svg className="w-10 h-10 text-[#b76e79] mx-auto opacity-60" fill="currentColor" viewBox="0 0 20 20">
@@ -187,11 +188,11 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* ===== NOVA SEÇÃO: PROGRAMA DO DIA / CRONOGRAMA ===== */}
+      {/* Seção do Cronograma */}
       <ProgramaDia />
 
       {/* Seção da Foto Especial - MOMENTO */}
-      <section className="max-w-6xl mx-auto px-6 mb-32">
+      <section id="nossa-historia" className="max-w-6xl mx-auto px-6 mb-32">
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row border border-[#d4af37]/10 reveal-up">
           <div className="md:w-3/5 relative h-[500px] md:h-auto overflow-hidden">
             <img 
@@ -299,10 +300,11 @@ const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Botões flutuantes animados */}
+      {/* Botões flutuantes */}
       <BotaoPresentesAnimado />
       <BotaoMenuAnimado />
       <BotaoPresentesCompacto />
+      <BotoesCronogramaAnimado />
     </>
   );
 
