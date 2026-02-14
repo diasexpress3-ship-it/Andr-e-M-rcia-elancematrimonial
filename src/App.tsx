@@ -127,7 +127,7 @@ const App: React.FC = () => {
   // ===== COMPONENTE DA PÁGINA PRINCIPAL =====
   const HomePage = () => (
     <>
-      {/* Header Section - Capa */}
+      {/* 1. HEADER - Capa */}
       <header className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center text-center px-4">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 brightness-[0.7] animate-kenburns" 
@@ -173,7 +173,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Seção de Introdução - O Início do Nosso Sempre */}
+      {/* 2. SEÇÃO DE INTRODUÇÃO - "O Início do Nosso Sempre" */}
       <section className="max-w-4xl mx-auto py-32 px-6 text-center overflow-hidden">
         <div className="animate-sway-x inline-block mb-8">
             <svg className="w-10 h-10 text-[#b76e79] mx-auto opacity-60" fill="currentColor" viewBox="0 0 20 20">
@@ -188,10 +188,7 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Seção do Cronograma */}
-      <ProgramaDia />
-
-      {/* Seção da Foto Especial - MOMENTO */}
+      {/* 3. SEÇÃO DA FOTO ESPECIAL - MOMENTO (Nossa História) */}
       <section id="nossa-historia" className="max-w-6xl mx-auto px-6 mb-32">
         <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row border border-[#d4af37]/10 reveal-up">
           <div className="md:w-3/5 relative h-[500px] md:h-auto overflow-hidden">
@@ -221,7 +218,10 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Local do Evento */}
+      {/* 4. SEÇÃO DO CRONOGRAMA */}
+      <ProgramaDia />
+
+      {/* 5. LOCAL DO EVENTO */}
       <section className="bg-white py-32 border-y border-[#d4af37]/10 overflow-hidden">
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-4xl md:text-5xl font-serif mb-16 italic text-[#2c1810] text-center reveal-up">O Local do Grande Dia</h2>
@@ -270,14 +270,14 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* RSVP */}
+      {/* 6. RSVP */}
       <section id="rsvp" className="py-32 px-6 bg-[#fff9f0]">
         <div className="animate-sway-all">
           <RSVPForm />
         </div>
       </section>
 
-      {/* Footer */}
+      {/* 7. FOOTER */}
       <footer className="relative py-20 px-6 bg-white overflow-hidden">
         <div className="max-w-6xl mx-auto text-center reveal-up">
           <div className="max-w-xs mx-auto mb-10 h-[1px] bg-[#d4af37] opacity-20" />
@@ -300,7 +300,7 @@ const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Botões flutuantes */}
+      {/* BOTÕES FLUTUANTES */}
       <BotaoPresentesAnimado />
       <BotaoMenuAnimado />
       <BotaoPresentesCompacto />
