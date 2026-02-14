@@ -13,7 +13,7 @@ const ProgramaDia: React.FC = () => {
     { hora: '13:00', titulo: 'Welcome Drink & Sessão de Fotos', descricao: 'No local do evento' },
     { hora: '14:30', titulo: 'Entrada dos Noivos', descricao: 'No salão de eventos e discurso', destaque: true },
     { hora: '15:30', titulo: 'Refeição Principal', descricao: 'Rodízio' },
-    { hora: '18:00', titulo: 'Abertura de Sala', descricao: 'Abertura da pista de dança' },
+    { hora: '18:00', titulo: 'Abertura da Pista de Dança', descricao: '' },
     { hora: '21:00', titulo: 'Corte do Bolo', descricao: '', destaque: true },
     { hora: '21:40', titulo: 'Entrega de Buquê', descricao: 'Lacinho' },
     { hora: '22:35', titulo: 'Entrega de Brindes', descricao: '' },
@@ -21,7 +21,7 @@ const ProgramaDia: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-b from-[#fff9f0] to-white overflow-hidden">
+    <section id="cronograma" className="py-20 px-4 bg-gradient-to-b from-[#fff9f0] to-white overflow-hidden">
       <div className="max-w-4xl mx-auto">
         {/* Título */}
         <div className="text-center mb-12 reveal-up">
